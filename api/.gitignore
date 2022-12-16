@@ -1,0 +1,5 @@
+.coverage
+htmlcov
+config.py
+config_test.py
+package-lock.json
