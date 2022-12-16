@@ -24,6 +24,7 @@ def gpio_close():
     GPIO.output(SIGNAL, GPIO.LOW)
 
 
+@switch_api.route('/<string:_lobby_id>')
 class switch_res(Resource):
 
     @switch_api.marshal_with(switch_render)
