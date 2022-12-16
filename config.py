@@ -1,0 +1,2 @@
+NLED = 50
+DEV_PORT = 8000

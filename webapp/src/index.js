@@ -4,7 +4,7 @@ console.log('IOT-seed');
 
 
 let example_getConfig = () => {
-  fetch('http://localhost:5000/api/config/', {
+  fetch(window.conf.deviceUrl + '/api/config/', {
     method: 'GET',
     headers: { 'Content-Type': 'application/json;charset=UTF-8',
                'Accept': 'application/json, text/plain',
@@ -15,7 +15,6 @@ let example_getConfig = () => {
     });
   });
 }
-example_getConfig();
 
 let example_setConfig = () => {
 
@@ -31,10 +30,10 @@ let example_setConfig = () => {
   }
 
   let reqbody = JSON.stringify({
-  positions: positions
+    positions: positions
   });
 
-  fetch('http://localhost:5000/api/config/', {
+  fetch(window.conf.deviceUrl + '/api/config/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json;charset=UTF-8',
                'Accept': 'application/json, text/plain',
@@ -46,3 +45,26 @@ let example_setConfig = () => {
     });
   });
 }
+
+let example_postLeds = () => {
+  let colors = [{ r:255, g:255, b:0, },
+                { r:0, g:255, b:255, },
+                { r:255, g:0, b:255, }];
+
+  let reqbody = JSON.stringify({
+    colors: colors
+  });
+  fetch(window.conf.deviceUrl + '/api/leds/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json;charset=UTF-8',
+               'Accept': 'application/json, text/plain',
+               'Access-Control-Allow-Origin': '*'},
+    body: reqbody
+  }).then((response) => {
+    response.json().then((body) => {
+      console.log('response', body);
+    });
+  });
+}
+
+example_postLeds();

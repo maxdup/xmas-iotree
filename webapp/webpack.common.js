@@ -55,9 +55,6 @@ module.exports = {
     new MiniCssExtractPlugin({
       filename: '[name].[contenthash].css'
     }),
-    new HtmlWebpackPlugin({
-      template: path.join(dirSrc, 'index.html'),
-    }),
     new FaviconsWebpackPlugin({
       logo: path.join(dirSrc, './favicon.png'),
       mode: 'webapp',

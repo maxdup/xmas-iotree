@@ -8,10 +8,10 @@ sys.path.insert(
     0, "/var/www/iot-seed/api/env/lib/python3.9/site-packages")
 
 from api import create_app
-application = create_app()
+application = create_app('config')
 
 # deploying on apache
-# user this as a minimal config
+# use this as a minimal config
 '''
 <VirtualHost *:80>
         ErrorLog ${APACHE_LOG_DIR}/error.log

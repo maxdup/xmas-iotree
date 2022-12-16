@@ -24,11 +24,6 @@ config_render = config_api.model('config', {
     'led_count': fields.Integer(),
 })
 
-args = {'config': {'required': True}}
-cargs = {'positions': {'type': list}}
-
-request_parser = RequestParser(arguments=cargs)
-
 
 def make_response(conf):
     return {**conf, **{
