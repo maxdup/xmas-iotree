@@ -6,9 +6,6 @@ console.log('IOT-seed');
 let example_getConfig = () => {
   fetch(window.conf.deviceUrl + '/api/config/', {
     method: 'GET',
-    headers: { 'Content-Type': 'application/json;charset=UTF-8',
-               'Accept': 'application/json, text/plain',
-               'Access-Control-Allow-Origin': '*'}
   }).then((response) => {
     response.json().then((body) => {
       console.log('response', body);
@@ -35,10 +32,8 @@ let example_setConfig = () => {
 
   fetch(window.conf.deviceUrl + '/api/config/', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json;charset=UTF-8',
-               'Accept': 'application/json, text/plain',
-               'Access-Control-Allow-Origin': '*'},
-    body: reqbody
+    body: reqbody,
+    headers: { 'Content-Type': 'application/json' }
   }).then((response) => {
     response.json().then((body) => {
       console.log('response', body);
@@ -56,10 +51,8 @@ let example_postLeds = () => {
   });
   fetch(window.conf.deviceUrl + '/api/leds/', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json;charset=UTF-8',
-               'Accept': 'application/json, text/plain',
-               'Access-Control-Allow-Origin': '*'},
-    body: reqbody
+    body: reqbody,
+    headers: { 'Content-Type': 'application/json' }
   }).then((response) => {
     response.json().then((body) => {
       console.log('response', body);
