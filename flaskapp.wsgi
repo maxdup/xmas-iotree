@@ -40,3 +40,8 @@ application = create_app('config')
 # usermod -a -G gpio pi
 
 # sudo chown -R pi:pi /var/www
+
+
+# sudo apt-get install rabbitmq-server
+# sudo systemctl start rabbitmq-server
+# sudo systemctl enable rabbitmq-server

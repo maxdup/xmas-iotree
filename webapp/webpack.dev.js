@@ -25,7 +25,8 @@ devConfig = {
       template: path.join(dirSrc, 'index.ejs'),
       window: {
         conf: {
-          deviceUrl: 'http://localhost:8000',
+          //deviceUrl: 'http://localhost:8000',
+          deviceUrl: 'http://192.168.2.112',
         }
       }
     }),

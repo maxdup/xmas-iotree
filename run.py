@@ -1,4 +1,4 @@
-from api import create_app, socketio
+from api import create_app  # , socketio
 
 iotApp = create_app('config')
 
