@@ -41,10 +41,17 @@ let example_setConfig = () => {
   });
 }
 
+const NLED = 50;
+let offset = 0;
+
 let example_postLeds = () => {
-  let colors = [{ r:255, g:255, b:0, },
-                { r:0, g:255, b:255, },
-                { r:255, g:0, b:255, }];
+  offset += 0.4;
+  let colors = [];
+  for (let i = 0; i < NLED; i++){
+    let y = Math.sin((i+offset) * 0.20);
+    let b = (y + 1) / 2 * 255;
+    colors.push({r:Math.min(b+50, 255), g: 0, b: b})
+  }
 
   let reqbody = JSON.stringify({
     colors: colors
@@ -53,11 +60,10 @@ let example_postLeds = () => {
     method: 'POST',
     body: reqbody,
     headers: { 'Content-Type': 'application/json' }
-  }).then((response) => {
-    response.json().then((body) => {
-      console.log('response', body);
-    });
   });
+  setTimeout(example_postLeds, 100);
 }
 
+
 example_postLeds();
+

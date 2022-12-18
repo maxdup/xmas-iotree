@@ -34,7 +34,7 @@ class leds_res(Resource):
             for i in range(app.config['NLED']):
                 c = leds[i % len(leds)]
                 response.append(c)
-                message.append([c['r'], c['g'], c['b']])
+                message.append([int(c['r']), int(c['g']), int(c['b'])])
 
         except Exception as e:
             print(e)

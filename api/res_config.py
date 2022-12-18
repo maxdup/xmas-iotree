@@ -1,4 +1,4 @@
-from flask import request
+from flask import current_app as app, request
 from flask_restx import Resource, fields, marshal, marshal_with, abort, Namespace
 from api.utils import RequestParser
 
@@ -7,7 +7,8 @@ import json
 
 config_api = Namespace('Config', path='/config',
                        description="Config resource")
-NLED = 50
+
+NLED = app.config['NLED']
 
 pos_render = config_api.model('position', {
     'x': fields.Float,

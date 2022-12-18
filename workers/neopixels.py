@@ -1,16 +1,23 @@
 import os
+import sys
 import json
 import pika
+import inspect
 
-NLED = 50
 isPI = os.uname()[4][:3] == 'arm'
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
+from config import NLED
 
 try:
     import board
     import neopixel
 except ImportError:
     if isPI:
-        print('import error for neopixel')
+        print('[❌] import error for neopixel')
 
 if isPI:
     pixels = neopixel.NeoPixel(board.D18, NLED, brightness=0.25,
@@ -25,17 +32,16 @@ def main():
     def onMessage(ch, method, properties, body):
         colors = json.loads(body)
         if isPI:
-            for p in colors:
-                pixels[i] = (p[0], p[1], p[2])
+            for i in range(len(colors)):
+                c =  colors[i]
+                pixels[i] = (c[0], c[1], c[2])
             pixels.show()
-
-        print("[!] Received %r leds" % len(colors))
 
     channel.basic_consume(queue='neopixel',
                           auto_ack=True,
                           on_message_callback=onMessage)
 
-    print(' [*] Waiting for messages. To exit press CTRL+C')
+    print('[*] Waiting for messages. To exit press CTRL+C')
     channel.start_consuming()
 
 
@@ -48,3 +54,25 @@ if __name__ == '__main__':
             sys.exit(0)
         except SystemExit:
             os._exit(0)
+
+
+
+# To run as a systemd service
+# /etc/systemd/system/neopixel.service
+
+'''
+[Unit]
+Description=Neopixel IOT service
+After=multi-user.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/bin/python3 /var/www/xmas-iotree/workers/neopixels.py
+
+[Install]
+WantedBy=multi-user.target
+'''
+# sudo systemctl daemon-reload
+# sudo systemctl enable neopixel.service
+# sudo systemctl start neopixel.service
