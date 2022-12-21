@@ -8,8 +8,6 @@ import json
 config_api = Namespace('Config', path='/config',
                        description="Config resource")
 
-NLED = app.config['NLED']
-
 pos_render = config_api.model('position', {
     'x': fields.Float,
     'y': fields.Float,
@@ -27,6 +25,7 @@ config_render = config_api.model('config', {
 
 
 def make_response(conf):
+    NLED = app.config['NLED']
     return {**conf, **{
         'led_count': NLED,
         'bounding_box': {
@@ -51,6 +50,7 @@ class config_res(Resource):
 
     @config_api.marshal_with(config_render)
     def post(self):
+        NLED = app.config['NLED']
         try:
             content = request.get_json()
             config = {'positions': []}

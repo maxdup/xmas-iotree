@@ -2,6 +2,7 @@ import './index.scss';
 
 console.log('IOT-seed');
 
+const NLED = 400;
 
 let example_getConfig = () => {
   fetch(window.conf.deviceUrl + '/api/config/', {
@@ -15,10 +16,9 @@ let example_getConfig = () => {
 
 let example_setConfig = () => {
 
-  let nleds = 3;
   let positions = [];
 
-  for (let i = 0; i < nleds; i++){
+  for (let i = 0; i < NLED; i++){
     positions.push({
       x: Math.floor(Math.random() * 2 -1),
       y: Math.floor(Math.random() * 2 -1),
@@ -41,7 +41,7 @@ let example_setConfig = () => {
   });
 }
 
-const NLED = 50;
+
 let offset = 0;
 
 let example_postLeds = () => {
@@ -61,6 +61,7 @@ let example_postLeds = () => {
     body: reqbody,
     headers: { 'Content-Type': 'application/json' }
   });
+
   setTimeout(example_postLeds, 100);
 }
 
