@@ -2,81 +2,145 @@ import requests
 import os
 import sys
 import inspect
+import json
+import argparse
+
 from time import sleep
 from datetime import datetime, timedelta
 
 import numpy
+import random
 import cv2
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-# your camera is meant to be used in portrait mode, rotated 90 degrees ccw
-
 from config import NLED
 
 
-url = 'http://192.168.2.112/api/leds/'
+AUTO_MODE_INSTRUCTIONS = '''
+Controls for auto mode:
+- Spacebar  - Starts the scan
+- Esc       - Stop/cancels the scan
+'''
+
+ASSISTED_MODE_INSTRUCTIONS = '''
+Controls for assisted mode:
+  Spacebar    - use the suggested coordinate
+  left-click  - use the clicked area for coordinate
+  \           - Omits the value for this coordinate (None)
+  Esc         - stop/cancels the scan
+'''
+
+cam_orientation = None
+cam_h = None
+cam_w = None
+led_url = None
 
 lit = {'r':255, 'g':255, 'b':255}
 unlit = {'r':0, 'g':0, 'b':0}
 leds = [unlit] * 50
 
+cam = cv2.VideoCapture(0)
+
 def sequenceAt(i):
-    print('calibrating ' + str(i))
+    print('calibrating {}/{}'.format(i+1, NLED))
     leds = [unlit] * NLED
     leds[i] = lit
-    requests.post(url, json={'colors': leds})
-
-def screen_pos_to_coords(x,y):
-    if CAM_ORIENTATION == 'PORTRAIT':
-        return (y,x)
-    else:
-        return (x,y)
-
-
-cam = cv2.VideoCapture(0)
-cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1980)
-cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-
+    requests.post(led_url, json={'colors': leds})
 
 BLUR_RADIUS = 11
 
 
+def make_window(mode):
+    check, frame = cam.read()
+    windowName = 'Calibration - {}'.format(mode)
+    cv2.namedWindow(windowName, cv2.WINDOW_NORMAL)
+    cv2.imshow(windowName, frame)
+
+    if cam_orientation != 'portrait':
+        cv2.resizeWindow(windowName, cam_w, cam_h)
+    else:
+        cv2.resizeWindow(windowName, cam_h, cam_w)
+    cv2.imshow(windowName, frame)
+    return windowName
+
+
+def make_frame(window):
+    check, frame = cam.read()
+    if cam_orientation == 'portrait':
+        frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray = cv2.GaussianBlur(gray, (BLUR_RADIUS, BLUR_RADIUS), 0)
+
+    (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(gray)
+    cv2.circle(frame, maxLoc, BLUR_RADIUS, (0, 0, 255), 2)
+    cv2.imshow(window, frame)
+    return maxLoc
+
+def assisted_mode():
+    window = make_window('Assisted')
+    coords = [None] * NLED
+    i = 0
+
+    def mouseClick(event,x,y,flags,param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            nonlocal i
+            coords[i] = (x,y)
+            i += 1
+    cv2.setMouseCallback(window, mouseClick)
+
+    sequenceAt(i)
+
+    while (i < NLED):
+        coord = make_frame(window)
+        key = cv2.waitKey(1)
+
+        if key == 27: # esc, to exit
+            return None
+        elif key == 32: # spacebar, to accept
+            coords[i] = coord
+            i += 1
+            sequenceAt(i)
+        elif key == 92: # \, to reject
+            coords[i] = None
+            i += 1
+            sequenceAt(i)
+        elif key == 8: # backspace, to undo
+            i -= 1
+            sequenceAt(i)
+
+    return coords
+
 def auto_mode():
+    window = make_window('Auto')
     delay = timedelta(seconds=0.5)
     coords = [None] * NLED
     i = 0
     sequenceAt(i)
 
     while (True):
-        check, frame = cam.read()
-        cv2.imshow('video', frame)
-
+        make_frame(window)
         key = cv2.waitKey(1)
+
         if key == 32: # spacebar, to start
             break
+        if key == 27: # esc, to exit
+            return None
 
     sequenceAt(i)
     now = datetime.now()
 
     while (i < NLED):
-        check, frame = cam.read()
-
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        gray = cv2.GaussianBlur(gray, (BLUR_RADIUS, BLUR_RADIUS), 0)
-
-        (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(gray)
-        cv2.circle(frame, maxLoc, BLUR_RADIUS, (255, 0, 0), 2)
-
-        cv2.imshow('video', frame)
+        coord = make_frame(window)
 
         key = cv2.waitKey(1)
-        if key == 27: # spacebar, to start
+        if key == 27: # esc, to exit
             return None
 
         if (datetime.now() - now >= delay):
-            coords[i] = screen_pos_to_coords(maxLoc[0], maxLoc[1])
+            coords[i] = coord
             i += 1
 
             if i >= NLED:
@@ -87,59 +151,58 @@ def auto_mode():
 
     return coords
 
-def assisted_mode():
-    coords = [None] * NLED
-    i = 0
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='Generate Coordinates for your set of leds')
 
-    def mouseClick(event,x,y,flags,param):
-        if event == cv2.EVENT_LBUTTONDOWN:
-            nonlocal i
-            print(flags)
-            print(param)
-            coords[i] = screen_pos_to_coords(x,y)
-            i += 1
-            print('click!')
+    parser.add_argument('angle', choices=['xpos', 'ypos', 'xneg', 'yneg'],
+                        help='The angle of the capture.')
 
-    while (i < NLED):
+    parser.add_argument('url',
+                        help='The api endpoint that controls your leds (ex: http://192.168.1.11/api/leds/).')
 
-        sequenceAt(i)
-        check, frame = cam.read()
+    parser.add_argument('-m', '--mode', choices=['assisted', 'auto', 'mock'],
+                        default="assisted", help='The scanning mode')
 
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        gray = cv2.GaussianBlur(gray, (BLUR_RADIUS, BLUR_RADIUS), 0)
+    parser.add_argument('-co', '--cam-orientation', choices=['portrait', 'landscape' ],
+                        default="portrait", help='The orientation of the capture.')
 
-        (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(gray)
-        cv2.circle(frame, maxLoc, BLUR_RADIUS, (255, 0, 0), 2)
+    parser.add_argument('-ch', '--cam-height', type=int,
+                        default=1080, help='The height of the camera resolution.')
 
-        cv2.namedWindow('Calibration')
-        cv2.setMouseCallback('Calibration', mouseClick)
-
-        cv2.imshow('Calibration', frame)
-
-        key = cv2.waitKey(1)
-
-        if key == 27: # esc key
-            return None
-        elif key == 32: # spacebar, to accept
-            coords[i] = screen_pos_to_coords(maxLoc[0], maxLoc[1])
-            i += 1
-        elif key == 92: # \, to reject
-            coords[i] = None
-            i += 1
-        elif key == 8: # backspace, to undo
-            i -= 1
-
-    return coords
+    parser.add_argument('-cw', '--cam-width', type=int,
+                        default=1980, help='The width of the camera resolution.')
 
 
-MODE = 'assisted' # ['AUTO', 'ASSISTED', 'MANUAL']
-CAM_ORIENTATION = 'portrait' # ['PORTRAIT', 'LANDSCAPE']
-CAM_POSITION = 'Xplus' # ['Xplus', 'xMinus', 'yPlus', 'yMinux']
+    args = parser.parse_args()
 
-if MODE == 'ASSISTED':
-    coords = assisted_mode()
-elif MODE == 'AUTO':
-    coords = auto_mode()
+    cam_orientation = args.cam_orientation
+    cam_h = args.cam_height
+    cam_w = args.cam_width
+    cam.set(cv2.CAP_PROP_FRAME_WIDTH, cam_w)
+    cam.set(cv2.CAP_PROP_FRAME_HEIGHT, cam_h)
 
-print(coords)
+    led_url = args.url
 
+    if args.mode == 'assisted':
+        print(ASSISTED_MODE_INSTRUCTIONS)
+        coords = assisted_mode()
+    elif args.mode == 'auto':
+        print(AUTO_MODE_INSTRUCTIONS)
+        coords = auto_mode()
+    elif args.mode == 'mock':
+        coords = [(random.randrange(0,100),
+                   random.randrange(0,100),
+                   random.randrange(0,100)) for i in range(NLED)]
+
+    COORDFILE = 'coordinates.json'
+    filecoords = {}
+    if os.path.exists(COORDFILE):
+        with open(COORDFILE, 'r+') as f:
+            content = f.read() or '{}'
+            filecoords = json.loads(content)
+
+    filecoords[args.angle] = coords
+
+    with open(COORDFILE, 'w+') as f:
+        f.write(json.dumps(filecoords))
