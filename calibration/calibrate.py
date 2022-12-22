@@ -11,11 +11,12 @@ from datetime import datetime, timedelta
 import numpy
 import random
 import cv2
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+currentdir = os.path.dirname(os.path.abspath(
+    inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-from config import NLED
+from config import NLED  # NOQA: #E402
 
 
 AUTO_MODE_INSTRUCTIONS = '''
@@ -41,19 +42,21 @@ cam_h = None
 cam_w = None
 led_url = None
 
-lit = {'r':255, 'g':255, 'b':255}
-unlit = {'r':0, 'g':0, 'b':0}
+lit = {'r': 255, 'g': 255, 'b': 255}
+unlit = {'r': 0, 'g': 0, 'b': 0}
 leds = [unlit] * 50
 
 cam = cv2.VideoCapture(0)
 
+
 def sequenceAt(i):
-    i = min(len(leds)-1, max(0, i))
+    i = min(NLED-1, max(0, i))
     print('calibrating {}/{}'.format(i+1, NLED))
 
     leds = [unlit] * NLED
     leds[i] = lit
     requests.post(led_url, json={'colors': leds})
+
 
 def make_window(mode):
     check, frame = cam.read()
@@ -62,7 +65,7 @@ def make_window(mode):
     cv2.imshow(windowName, frame)
 
     portrait = cam_orientation == 'portrait'
-    w_w, w_h =  (cam_h, cam_w) if portrait else (cam_w, cam_h)
+    w_w, w_h = (cam_h, cam_w) if portrait else (cam_w, cam_h)
     cv2.resizeWindow(windowName, w_w, w_h)
 
     cv2.imshow(windowName, frame)
@@ -80,45 +83,47 @@ def make_frame(window):
     (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(gray)
 
     portrait = cam_orientation == 'portrait'
-    w_w, w_h =  (cam_h, cam_w) if portrait else (cam_w, cam_h)
-    cv2.line(frame, (int(w_w/2),0), (int(w_w/2),w_h), (255, 255, 255, 0.5), 2)
-    cv2.circle(frame, maxLoc, BLUR_RADIUS, (0, 0, 255), 2)
+    w_w, w_h = (cam_h, cam_w) if portrait else (cam_w, cam_h)
+    cv2.line(frame, (int(w_w/2), 0), (int(w_w/2), w_h), (255, 255, 255, 0.5), 2)
+    cv2.circle(frame, maxLoc, BLUR_RADIUS, (0, 0, 255), 5)
     cv2.imshow(window, frame)
     return maxLoc
+
 
 def assisted_mode():
     window = make_window('Assisted')
     coords = [None] * NLED
     i = 0
+    sequenceAt(i)
 
-    def mouseClick(event,x,y,flags,param):
+    def mouseClick(event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
             nonlocal i
-            coords[i] = (x,y)
+            coords[i] = (x, y)
             i += 1
-    cv2.setMouseCallback(window, mouseClick)
-
-    sequenceAt(i)
+            sequenceAt(i)
 
     while (i < NLED):
         coord = make_frame(window)
         key = cv2.waitKey(1)
+        cv2.setMouseCallback(window, mouseClick)
 
-        if key == 27: # esc, to exit
+        if key == 27:  # esc, to exit
             return None
-        elif key == 32: # spacebar, to accept
+        elif key == 32:  # spacebar, to accept
             coords[i] = coord
             i += 1
             sequenceAt(i)
-        elif key == 92: # \, to reject
+        elif key == 92:  # \, to reject
             coords[i] = None
             i += 1
             sequenceAt(i)
-        elif key == 8: # backspace, to undo
+        elif key == 8:  # backspace, to undo
             i -= 1
             sequenceAt(i)
 
     return coords
+
 
 def auto_mode():
     window = make_window('Auto')
@@ -131,9 +136,9 @@ def auto_mode():
         make_frame(window)
         key = cv2.waitKey(1)
 
-        if key == 32: # spacebar, to start
+        if key == 32:  # spacebar, to start
             break
-        if key == 27: # esc, to exit
+        if key == 27:  # esc, to exit
             return None
 
     sequenceAt(i)
@@ -143,7 +148,7 @@ def auto_mode():
         coord = make_frame(window)
 
         key = cv2.waitKey(1)
-        if key == 27: # esc, to exit
+        if key == 27:  # esc, to exit
             return None
 
         if (datetime.now() - now >= delay):
@@ -158,6 +163,7 @@ def auto_mode():
 
     return coords
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Generate Coordinates for your set of leds')
@@ -171,7 +177,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--mode', choices=['assisted', 'auto', 'mock'],
                         default="assisted", help='The scanning mode')
 
-    parser.add_argument('-co', '--cam-orientation', choices=['portrait', 'landscape' ],
+    parser.add_argument('-co', '--cam-orientation', choices=['portrait', 'landscape'],
                         default="portrait", help='The orientation of the capture.')
 
     parser.add_argument('-ch', '--cam-height', type=int,
@@ -179,7 +185,6 @@ if __name__ == '__main__':
 
     parser.add_argument('-cw', '--cam-width', type=int,
                         default=1980, help='The width of the camera resolution.')
-
 
     args = parser.parse_args()
 
@@ -198,9 +203,9 @@ if __name__ == '__main__':
         print(AUTO_MODE_INSTRUCTIONS)
         coords = auto_mode()
     elif args.mode == 'mock':
-        coords = [(random.randrange(0,100),
-                   random.randrange(0,100),
-                   random.randrange(0,100)) for i in range(NLED)]
+        coords = [(random.randrange(0, 100),
+                   random.randrange(0, 100),
+                   random.randrange(0, 100)) for i in range(NLED)]
 
     filecoords = {}
     if os.path.exists(COORDFILE):
