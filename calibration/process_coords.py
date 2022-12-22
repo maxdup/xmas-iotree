@@ -8,7 +8,8 @@ sys.path.insert(0, parentdir)
 
 from config import NLED
 
-COORDFILE = 'coordinates.json'
+COORD_INPUT_FILE = 'raw_coordinates.json'
+COORD_OUTPUT_FILE = 'coordinates.json'
 
 
 def aggregate(arrs): # arrays to be averaged together
@@ -28,10 +29,9 @@ def aggregate(arrs): # arrays to be averaged together
     return coords
 
 
-
 if __name__ == '__main__':
 
-    with open(COORDFILE, 'r+') as f:
+    with open(COORD_INPUT_FILE, 'r+') as f:
         content = f.read() or '{}'
         raw_coords = json.loads(content)
 
@@ -51,4 +51,3 @@ if __name__ == '__main__':
 
     coords = [(Xs[i], Ys[i], Zs[i]) for i in range(NLED)]
     print(coords)
-

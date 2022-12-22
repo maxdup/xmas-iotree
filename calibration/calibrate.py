@@ -20,17 +20,21 @@ from config import NLED
 
 AUTO_MODE_INSTRUCTIONS = '''
 Controls for auto mode:
-- Spacebar  - Starts the scan
-- Esc       - Stop/cancels the scan
+  Spacebar  - Starts the scan
+  Esc       - Stop/cancels the scan
 '''
 
 ASSISTED_MODE_INSTRUCTIONS = '''
 Controls for assisted mode:
   Spacebar    - use the suggested coordinate
   left-click  - use the clicked area for coordinate
+  backspace   - undo the last coord
   \           - Omits the value for this coordinate (None)
   Esc         - stop/cancels the scan
 '''
+
+BLUR_RADIUS = 11
+COORDFILE = 'raw_coordinates.json'
 
 cam_orientation = None
 cam_h = None
@@ -44,13 +48,12 @@ leds = [unlit] * 50
 cam = cv2.VideoCapture(0)
 
 def sequenceAt(i):
+    i = min(len(leds)-1, max(0, i))
     print('calibrating {}/{}'.format(i+1, NLED))
+
     leds = [unlit] * NLED
     leds[i] = lit
     requests.post(led_url, json={'colors': leds})
-
-BLUR_RADIUS = 11
-
 
 def make_window(mode):
     check, frame = cam.read()
@@ -58,10 +61,10 @@ def make_window(mode):
     cv2.namedWindow(windowName, cv2.WINDOW_NORMAL)
     cv2.imshow(windowName, frame)
 
-    if cam_orientation != 'portrait':
-        cv2.resizeWindow(windowName, cam_w, cam_h)
-    else:
-        cv2.resizeWindow(windowName, cam_h, cam_w)
+    portrait = cam_orientation == 'portrait'
+    w_w, w_h =  (cam_h, cam_w) if portrait else (cam_w, cam_h)
+    cv2.resizeWindow(windowName, w_w, w_h)
+
     cv2.imshow(windowName, frame)
     return windowName
 
@@ -75,6 +78,10 @@ def make_frame(window):
     gray = cv2.GaussianBlur(gray, (BLUR_RADIUS, BLUR_RADIUS), 0)
 
     (minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(gray)
+
+    portrait = cam_orientation == 'portrait'
+    w_w, w_h =  (cam_h, cam_w) if portrait else (cam_w, cam_h)
+    cv2.line(frame, (int(w_w/2),0), (int(w_w/2),w_h), (255, 255, 255, 0.5), 2)
     cv2.circle(frame, maxLoc, BLUR_RADIUS, (0, 0, 255), 2)
     cv2.imshow(window, frame)
     return maxLoc
@@ -195,7 +202,6 @@ if __name__ == '__main__':
                    random.randrange(0,100),
                    random.randrange(0,100)) for i in range(NLED)]
 
-    COORDFILE = 'coordinates.json'
     filecoords = {}
     if os.path.exists(COORDFILE):
         with open(COORDFILE, 'r+') as f:
