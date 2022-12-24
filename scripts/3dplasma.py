@@ -22,6 +22,7 @@ MATWZ = 60
 # Set this value to lower the RGB (1 = full range, 0.5 = Half range, etc...)
 dimLight = 0.2
 
+
 class boundingBox():
     def __init__(self):
         self.minX = math.inf
@@ -76,11 +77,12 @@ class matrix():
         self._wY = ly
         self._wZ = lz
 
-    def get(self,x, y, z):
+    def get(self, x, y, z):
         return self._list[x * self._strideX + y * self._strideY + z * self._strideZ]
 
     def set(self, x, y, z, val):
-        self._list[x * self._strideX + y * self._strideY + z * self._strideZ] = val
+        self._list[x * self._strideX + y *
+                   self._strideY + z * self._strideZ] = val
 
     def getTree(self, x, y, z):
         localX, localY, localZ = self._bb.normalize(x, y, z)
@@ -133,7 +135,10 @@ def xmaslight():
         time.sleep(slow)
 
         for LED in range(0, NLED):
-            pixels[LED] = workMat.getTree(coords[LED][0], coords[LED][1], coords[LED][2])
+            asd = workMat.getTree(
+                coords[LED][0], coords[LED][1], coords[LED][2])
+            print(asd)
+            pixels[LED] = asd
 
         pixels.show()
 
@@ -146,7 +151,8 @@ def xmaslight():
                     d3 = dist(x, y + t / 7, z, MATWX * 0.75, MATWY/2, MATWZ)
                     d4 = dist(x, y, z, MATWX*0.75, MATWY, MATWZ)
 
-                    value = math.sin(d1 / 8) + math.sin(d2 / 8.0) + math.sin(d3 / 7.0) + math.sin(d4 / 8.0)
+                    value = math.sin(d1 / 8) + math.sin(d2 / 8.0) + \
+                        math.sin(d3 / 7.0) + math.sin(d4 / 8.0)
 
                     colour = int((4 + value)) * 32
                     r = min(colour, 255) * dimLight
