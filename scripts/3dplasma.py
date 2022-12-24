@@ -89,7 +89,9 @@ class matrix():
         localX = int(localX * (self._wX - 1))
         localY = int(localY * (self._wY - 1))
         localZ = int(localZ * (self._wZ - 1))
-        return self.get(localX, localY, localZ)
+
+        out = self.get(localX, localY, localZ)
+        return (int(out[0]), int(out[1]), int(out[2]))
 
 
 def dist(x, y, z, wx, wy, wz):
@@ -106,7 +108,7 @@ def xmaslight():
     # IMPORT THE COORDINATES (please don't break this bit)
 
     with open('/var/www/xmas-iotree/coordinates.json', 'r+') as f:
-    coords = json.loads(f.read() or '{}')
+        coords = json.loads(f.read() or '{}')
     NLED = len(coords)
 
     pixels = neopixel.NeoPixel(

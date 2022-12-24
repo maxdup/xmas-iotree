@@ -50,7 +50,7 @@ def xmaslight():
 
     # NOTE THE LEDS ARE GRB COLOUR (NOT RGB)
 
-    # If you want to have user changable values, they need to be entered from the command line
+    # If you want to have use_r changable values, they need to be entered from the command line
     # so import sys sys and use sys.argv[0] etc
     # some_value = int(sys.argv[0])
 
@@ -59,7 +59,7 @@ def xmaslight():
     # coordfilename = "Python/coords.txt"
 
     with open('/var/www/xmas-iotree/coordinates.json', 'r+') as f:
-    coords = json.loads(f.read() or '{}')
+        coords = json.loads(f.read() or '{}')
     NLED = len(coords)
 
     pixels = neopixel.NeoPixel(
@@ -85,8 +85,6 @@ def rainbow_lights(pixels, coords):
     colors = [[0, 30, 0], [15, 15, 0], [30, 0, 0],
               [0, 15, 15], [0, 0, 30], [15, 0, 15]]
     # Scale for plot visualization, probably too high for LEDs
-    if (USE_PLOT):
-        colors = np.array(colors) * 4
     # Separate heights into discrete rings
     ring_height = (max_z - min_z) / (len(colors) - 1)
 
@@ -95,18 +93,17 @@ def rainbow_lights(pixels, coords):
     rot = np.pi / 18.0
 
     # Setup interactive plotting
-    if (USE_PLOT):
-        fig = plt.figure()
-        ax = fig.gca(projection='3d')
-        plt.ion()
 
     while(True):
         # Get LEDs & colors
         for led_idx in range(len(pixels)):
             c = cyl_coords_set[led_idx]
-            pixels[led_idx] = c.color
+            pixels[led_idx] = (int(c.color[0]),
+                               int(c.color[1]),
+                               int(c.color[2]))
 
         pixels.show()
+        time.sleep(0.025)
 
         # Update
         for c in cyl_coords_set:
