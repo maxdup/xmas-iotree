@@ -10,8 +10,11 @@ sys.path.insert(0, parentdir)
 from config import NLED  # NOQA: #E402
 
 
-COORD_INPUT_FILE = 'raw_coordinates.json'
-COORD_OUTPUT_FILE = 'coordinates.json'
+COORD_INPUT_FILE = 'scanned_coordinates.json'
+COORD_OUTPUT_FILE = 'processed_coordinates.json'
+
+CAMERA_SPACE = (1080, 1920) # portrait
+# CAMERA_SPACE = (1920, 1080) # landscape
 
 
 def offset(arrays):
@@ -27,9 +30,7 @@ def offset(arrays):
 
 def aggregate(arrs):  # arrays to be averaged together
 
-    # arrso = offset(arrs)
-
-    # average offset values
+    # average values
     coords = []
     for i in range(0, len(arrs[0])):
         vals = [arrs[j][i] for j in range(len(arrs))]
@@ -49,17 +50,20 @@ if __name__ == '__main__':
 
     coords = [(0, 0, 0)] * NLED
 
-    Xs = aggregate([[p[0] if p else None for p in raw_coords['xpos']],
-                    [p[0]*-1 if p else None for p in raw_coords['xneg']]])
+    maxW = CAMERA_SPACE[0] # horizontal offset
+    maxH = CAMERA_SPACE[1]
+
+    Xs = aggregate([[p[0]if p else None for p in raw_coords['xpos']],
+                    [maxW - p[0] if p else None for p in raw_coords['xneg']]])
 
     Ys = aggregate([[p[0] if p else None for p in raw_coords['ypos']],
-                    [p[0]*-1 if p else None for p in raw_coords['yneg']]])
+                    [maxW - p[0] if p else None for p in raw_coords['yneg']]])
 
-    Zs = aggregate([[p[1]*-1 if p else None for p in raw_coords['xpos']],
-                    [p[1]*-1 if p else None for p in raw_coords['xneg']],
+    Zs = aggregate([[maxH - p[1] if p else None for p in raw_coords['xpos']],
+                    [maxH - p[1] if p else None for p in raw_coords['xneg']],
 
-                    [p[1]*-1 if p else None for p in raw_coords['ypos']],
-                    [p[1]*-1 if p else None for p in raw_coords['yneg']]])
+                    [maxH - p[1] if p else None for p in raw_coords['ypos']],
+                    [maxH - p[1] if p else None for p in raw_coords['yneg']]])
 
     coords = [(Xs[i], Ys[i], Zs[i]) for i in range(NLED)]
 
@@ -84,7 +88,7 @@ if __name__ == '__main__':
         if not c[0] or not c[1] or not c[2]:
             print(c)
 
-    output = json.dumps(coords)
 
     with open(COORD_OUTPUT_FILE, 'w') as f:
+        output = json.dumps(coords)
         f.write(output)

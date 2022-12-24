@@ -1,4 +1,5 @@
 data/
+calibration/*.json
 
 env/
 venv/

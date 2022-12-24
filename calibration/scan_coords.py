@@ -35,7 +35,7 @@ Controls for assisted mode:
 '''
 
 BLUR_RADIUS = 11
-COORDFILE = 'raw_coordinates.json'
+COORDFILE = 'scanned_coordinates.json'
 
 cam_orientation = None
 cam_h = None
