@@ -9,10 +9,10 @@ import pika
 script_api = Namespace('Script', path='/script',
                         description="script resource")
 
-scripts_render = script_api.model('script', {
-    'filename': fields.String,
-    'content': fields.String
-})
+def list_scripts():
+    sdir = app.config['SCRIPTS_FOLDER']
+    return [f for f in os.listdir(sdir) if f.endswith(".py")]
+
 
 def get_filepath(filename=None):
     filename = os.path.basename(filename)
@@ -47,7 +47,7 @@ def run_file(filename=None):
         raise Exception("no filename")
     filepath = get_filepath(filename)
 
-    message = json.dumps({'script': os.path.abspath(filepath)})
+    message = json.dumps({'run_script': os.path.abspath(filepath)})
 
     connection = pika.BlockingConnection()
     channel = connection.channel()
@@ -57,8 +57,23 @@ def run_file(filename=None):
                           body=message)
     connection.close()
 
-    return True
+def stop_file(filename=None):
+    if not filename:
+        raise Exception("no filename")
+    filepath = get_filepath(filename)
 
+    message = json.dumps({'kill_script': os.path.abspath(filepath)})
+
+    connection = pika.BlockingConnection()
+    channel = connection.channel()
+    channel.queue_declare(queue='neopixel')
+    channel.basic_publish(exchange='',
+                          routing_key='neopixel',
+                          body=message)
+    connection.close()
+
+
+@script_api.route('/')
 @script_api.route('/<string:_filename>')
 class scripts_res(Resource):
 
@@ -76,8 +91,11 @@ class scripts_res(Resource):
             response.mimetype = "text/plain;charset=utf-8"
             return response
         else:
-            # TODO: list scripts
-            abort(404)
+            scripts = list_scripts()
+            content = json.dumps({'scripts': scripts})
+            response = make_response(content, 200)
+            response.mimetype = "application/json"
+            return response
 
     def post(self, _filename=None):
         if not _filename:
@@ -98,6 +116,19 @@ class scripts_res(Resource):
 
 
     def put(self, _filename=None):
+        if not _filename:
+            abort(404)
+        try:
+            run_file(_filename)
+        except Exception as e:
+            if e.args == 'file missing':
+                abort(404)
+            else:
+                print(e)
+                abort(400)
+        return make_response('', 200)
+
+    def delete(self, _filename=None):
         if not _filename:
             abort(404)
         try:
