@@ -7,10 +7,17 @@ import json
 import pika
 
 script_api = Namespace('Script', path='/script',
-                        description="script resource")
+                       description="script resource")
+
+
+def getScriptDir():
+    scriptDir = os.path.join(os.path.dirname(__file__), '..')
+    scriptDir = os.path.join(scriptDir, app.config['SCRIPTS_FOLDER'])
+    return scriptDir
+
 
 def list_scripts():
-    sdir = app.config['SCRIPTS_FOLDER']
+    sdir = getScriptDir()
     return [f for f in os.listdir(sdir) if f.endswith(".py")]
 
 
@@ -18,7 +25,7 @@ def get_filepath(filename=None):
     filename = os.path.basename(filename)
     if not filename.endswith('.py'):
         filename += '.py'
-    return os.path.join(app.config['SCRIPTS_FOLDER'], filename)
+    return os.path.join(getScriptDir(), filename)
 
 
 def get_file(filename=None):
@@ -34,6 +41,7 @@ def get_file(filename=None):
 
     return content
 
+
 def write_file(filename=None, content=None):
     if not filename:
         raise Exception("no filename")
@@ -41,6 +49,7 @@ def write_file(filename=None, content=None):
 
     with open(filepath, 'w', encoding="utf-8") as f:
         f.write(content)
+
 
 def run_file(filename=None):
     if not filename:
@@ -56,6 +65,7 @@ def run_file(filename=None):
                           routing_key='neopixel',
                           body=message)
     connection.close()
+
 
 def stop_file(filename=None):
     if not filename:
@@ -104,7 +114,6 @@ class scripts_res(Resource):
             content = request.get_data(as_text=True)
             write_file(_filename, content)
 
-
         except Exception as e:
             print(e)
             abort(400)
@@ -112,8 +121,6 @@ class scripts_res(Resource):
         response = make_response(content, 200)
         response.mimetype = "text/plain;charset=utf-8"
         return response
-
-
 
     def put(self, _filename=None):
         if not _filename:
