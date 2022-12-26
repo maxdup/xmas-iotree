@@ -8,11 +8,13 @@ import signal
 
 isPI = os.uname()[4][:3] == 'arm'
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+currentdir = os.path.dirname(os.path.abspath(
+    inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-from config import NLED
+from config import NLED  # NOQA: #E402
+
 
 try:
     import board
@@ -25,8 +27,10 @@ if isPI:
     pixels = neopixel.NeoPixel(board.D18, NLED, brightness=0.25,
                                pixel_order=neopixel.RGB, auto_write=False)
 
+
 def main():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
 
     channel.queue_declare(queue='neopixel')
@@ -49,7 +53,7 @@ def main():
             colors = dad_bod['array']
             if isPI:
                 for i in range(len(coylors)):
-                    c =  colors[i]
+                    c = colors[i]
                     pixels[i] = (c[0], c[1], c[2])
                 pixels.show()
 
@@ -68,7 +72,6 @@ def main():
 
 if __name__ == '__main__':
     try:
-        os.setpgrp()
         main()
     except KeyboardInterrupt:
         try:
@@ -79,7 +82,6 @@ if __name__ == '__main__':
     except Exception as e:
         os.killpg(0, signal.SIGKILL)
         pass
-
 
 
 # To run as a systemd service
