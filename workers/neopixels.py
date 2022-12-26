@@ -30,12 +30,18 @@ def main():
     channel.queue_declare(queue='neopixel')
 
     def onMessage(ch, method, properties, body):
-        colors = json.loads(body)
-        if isPI:
-            for i in range(len(colors)):
-                c =  colors[i]
-                pixels[i] = (c[0], c[1], c[2])
-            pixels.show()
+        dad_bod = json.loads(body)
+        if 'array' in dad_bod:
+            colors = dad_bod['array']
+            if isPI:
+                for i in range(len(coylors)):
+                    c =  colors[i]
+                    pixels[i] = (c[0], c[1], c[2])
+                pixels.show()
+        elif 'script' in dad_bod:
+            script = dad_bod['script']
+            print('script!', script)
+            pass
 
     channel.basic_consume(queue='neopixel',
                           auto_ack=True,

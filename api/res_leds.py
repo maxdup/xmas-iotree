@@ -30,23 +30,24 @@ class leds_res(Resource):
             content = request.get_json()
             leds = content['colors']
             response = []
-            message = []
+            colors = []
             for i in range(app.config['NLED']):
                 c = leds[i % len(leds)]
                 response.append(c)
-                message.append([int(c['r']), int(c['g']), int(c['b'])])
+                colors.append([int(c['r']), int(c['g']), int(c['b'])])
 
         except Exception as e:
             print(e)
             abort(400)
 
 
-        message = json.dumps(message)
+        message = json.dumps({'array': colors})
 
         connection = pika.BlockingConnection()
         channel = connection.channel()
         channel.queue_declare(queue='neopixel')
-        channel.basic_publish(exchange='', routing_key='neopixel',
+        channel.basic_publish(exchange='',
+                              routing_key='neopixel',
                               body=message)
         connection.close()
 
