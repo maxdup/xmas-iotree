@@ -2,7 +2,9 @@ import os
 import sys
 import json
 import pika
+import subprocess
 import inspect
+import signal
 
 isPI = os.uname()[4][:3] == 'arm'
 
@@ -29,13 +31,32 @@ def main():
 
     channel.queue_declare(queue='neopixel')
 
+    ps = []
+
+    def kill_script(filename=None):
+        for p in ps:
+            p.kill()
+        ps.clear()
+
+    def start_script(filepath):
+        p = subprocess.Popen(['python', '{}'.format(filepath)])
+        ps.append(p)
+
     def onMessage(ch, method, properties, body):
-        colors = json.loads(body)
-        if isPI:
-            for i in range(len(colors)):
-                c =  colors[i]
-                pixels[i] = (c[0], c[1], c[2])
-            pixels.show()
+        kill_script()
+        dad_bod = json.loads(body)
+        if 'array' in dad_bod:
+            colors = dad_bod['array']
+            if isPI:
+                for i in range(len(coylors)):
+                    c =  colors[i]
+                    pixels[i] = (c[0], c[1], c[2])
+                pixels.show()
+
+        elif 'run_script' in dad_bod:
+            script = dad_bod['run_script']
+            p = start_script(script)
+            print('[!] Running {}'.format(script))
 
     channel.basic_consume(queue='neopixel',
                           auto_ack=True,
@@ -47,13 +68,17 @@ def main():
 
 if __name__ == '__main__':
     try:
+        os.setpgrp()
         main()
     except KeyboardInterrupt:
-        print('Interrupted')
         try:
+            os.killpg(0, signal.SIGKILL)
             sys.exit(0)
         except SystemExit:
             os._exit(0)
+    except Exception as e:
+        os.killpg(0, signal.SIGKILL)
+        pass
 
 
 
