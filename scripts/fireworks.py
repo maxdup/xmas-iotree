@@ -1,27 +1,17 @@
-import neopixel
-import board
-import json
 import random
 import math
 import time
 
-with open('/var/www/xmas-iotree/coordinates.json', 'r+') as f:
-    coords = json.loads(f.read() or '{}')
-    NLED = len(coords)
+from _runtime import Runtime, NLED, COORDS, BOUNDING_BOX
 
-pixels = neopixel.NeoPixel(
-    board.D18, NLED, brightness=0.25, pixel_order=neopixel.GRB, auto_write=False)
-
-
-pixels.fill((0, 0, 0))
-
+rt = Runtime()
 decay = 4
 
 
 def distance(p1, p2):
-    distX = (coords[p1][0] - coords[p2][0]) ** 2
-    distY = (coords[p1][1] - coords[p2][1]) ** 2
-    distZ = ((coords[p1][2] - coords[p2][2]) * 2) ** 2
+    distX = (COORDS[p1][0] - COORDS[p2][0]) ** 2
+    distY = (COORDS[p1][1] - COORDS[p2][1]) ** 2
+    distZ = ((COORDS[p1][2] - COORDS[p2][2]) * 2) ** 2
     return abs(math.sqrt(distX + distY + distZ))
 
 
@@ -49,7 +39,7 @@ while(True):
 
     for i in range(NLED):
         d = distance(bomb, i)
-        pixels[i] = outColor(pixels[i], d)
+        rt[i] = outColor(rt[i], d)
 
     bombAge = bombAge + 0.05
 
@@ -58,4 +48,4 @@ while(True):
 
     time.sleep(0.0125)
 
-    pixels.show()
+    rt.show()

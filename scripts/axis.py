@@ -1,36 +1,23 @@
-import json
 import time
-import board
-import neopixel
 
+from _runtime import Runtime, NLED, COORDS, BOUNDING_BOX
 
-with open('/var/www/xmas-iotree/coordinates.json', 'r+') as f:
-    coords = json.loads(f.read() or '{}')
-    NLED = len(coords)
+rt = Runtime()
 
-pixels = neopixel.NeoPixel(
-    board.D18, NLED, brightness=0.25, pixel_order=neopixel.GRB, auto_write=False)
-
-pixels.fill((0, 0, 0))
-
-
-deltaX = 2
-deltaY = 2
-deltaZ = 2
 
 def toRGBval(dist):
     d = max(0, 0.10 - dist)
     s = min(0.25, d)
-    return int(d / 0.25 *255)
+    return int(d / 0.25 * 255)
+
 
 percent = 0
 lastTime = time.time()
 
 while (True):
-    deltaTime = time.time() - lastTime
-    lastTime = time.time()
+    dt = rt.time_delta()
 
-    percent += 10 * deltaTime # 10 percent per second
+    percent += 10 * dt  # 10 percent per second
     percent %= 100
 
     targetX = -1 + (percent/100) * 2
@@ -39,13 +26,13 @@ while (True):
 
     for j in range(NLED):
 
-        xdist = abs(coords[j][0] - targetX)
-        ydist = abs(coords[j][1] - targetY)
-        zdist = abs(coords[j][2] - targetZ)
+        xdist = abs(COORDS[j][0] - targetX)
+        ydist = abs(COORDS[j][1] - targetY)
+        zdist = abs(COORDS[j][2] - targetZ)
 
-        pixels[j] = (toRGBval(xdist),
-                     toRGBval(ydist),
-                     toRGBval(zdist))
+        rt[j] = (toRGBval(xdist),
+                 toRGBval(ydist),
+                 toRGBval(zdist))
 
-    pixels.show()
+    rt.show()
     time.sleep(0.1)

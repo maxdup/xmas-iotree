@@ -1,16 +1,19 @@
-import neopixels
-import board
-import json
+import time
+from _runtime import Runtime, NLED, COORDS, BOUNDING_BOX
 
-
-with open('/var/www/xmas-iotree/coordinates.json', 'r+') as f:
-    coords = json.loads(f.read() or '{}')
-    NLED = len(coords)
-
-pixels = neopixel.NeoPixel(
-    board.D18, NLED, brightness=0.25, pixel_order=neopixel.GRB, auto_write=False)
+rt = Runtime()
 
 for i in range(NLED):
-    pixels[i] = (0,0,0)
+    rt[i] = (0, 0, 0)
 
-pixels.show()
+rt.show()
+
+
+while(True):
+    for i in range(len(rt)):
+        rt[i] = ((rt[i][0] + 1) % 255,
+                 (rt[i][1] + 1) % 255,
+                 (rt[i][2] + 1) % 255)
+
+    rt.show()
+    time.sleep(0.1)
