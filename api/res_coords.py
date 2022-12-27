@@ -24,7 +24,9 @@ class coords_res(Resource):
     def get(self):
         coord_system = {'coords': []}
         try:
-            with open(COORD_FILENAME, 'r') as f:
+            dataDir = os.path.join(os.path.dirname(__file__), '..')
+            filename = os.path.join(dataDir, COORD_FILENAME)
+            with open(filename, 'r') as f:
                 coord_system = json.load(f)
         except Exception as e:
             abort(404)
@@ -46,7 +48,9 @@ class coords_res(Resource):
             return abort(400)
 
         os.makedirs('data', exist_ok=True)
-        with open(COORD_FILENAME, "w+") as f:
+        dataDir = os.path.join(os.path.dirname(__file__), '..')
+        filename = os.path.join(dataDir, COORD_FILENAME)
+        with open(filename, "w+") as f:
             json.dump(coord_system, f)
 
         return respond(coord_system)
