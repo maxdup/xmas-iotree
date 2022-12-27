@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask_restx import Api
 
 
-from api.res_config import config_api
+from api.res_coords import coords_api
 from api.res_script import script_api
 from api.res_leds import leds_api
 
@@ -17,6 +17,6 @@ httpapi = Api(bp_httpapi,
               prefix='/api',
               doc='/doc/')
 
-httpapi.add_namespace(config_api)
+httpapi.add_namespace(coords_api)
 httpapi.add_namespace(script_api)
 httpapi.add_namespace(leds_api)

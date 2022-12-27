@@ -7,7 +7,7 @@ import json
 import pika
 
 script_api = Namespace('Script', path='/script',
-                       description="script resource")
+                       description="Script resource")
 
 
 def getScriptDir():
