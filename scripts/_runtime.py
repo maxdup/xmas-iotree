@@ -39,18 +39,19 @@ class Runtime:
         self._lastTime = time.time()
 
     def show(self):
-        # send the frame
+        # Send a frame
 
         if isPI:
             self._np.show()
 
     def time_delta(self):
+        # Get time between calls
         delta = time.time() - self._lastTime
         self._lastTime = time.time()
         return delta
 
     def fill(self, color):
-        # fill every pixel
+        # Fill every pixel
         if isPI:
             self._np.fill(color)
         else:
@@ -59,14 +60,18 @@ class Runtime:
                 assert isinstance(color[i], int)
 
     def __len__(self):
+        # Get length of leds
         return NLED
 
     def __getitem__(self, key):
+        # Get color at
         if isinstance(key, int) and \
                 key in range(NLED):
             return self._arr[key]
 
     def __setitem__(self, key, value):
+        # Set color at
         if isinstance(key, int) and \
                 key in range(NLED):
             self._arr[key] = value
+            self._np[key] = value
