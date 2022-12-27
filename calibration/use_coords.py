@@ -16,7 +16,7 @@ if __name__ == '__main__':
         description='Submit Coordinates to your led controller')
 
     parser.add_argument('url',
-                        help='The api endpoint that controls your leds (ex: http://192.168.1.11/api/leds/).')
+                        help='The api endpoint that controls your leds (ex: http://192.168.1.11).')
 
     parser.add_argument('-c', '--coordinates', default="coordinates.json",
                         help='The json file containing your coordinates (ex: coordinates.json).')
