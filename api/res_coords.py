@@ -47,9 +47,10 @@ class coords_res(Resource):
             print(e)
             return abort(400)
 
-        os.makedirs('data', exist_ok=True)
         dataDir = os.path.join(os.path.dirname(__file__), '..')
         filename = os.path.join(dataDir, COORD_FILENAME)
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+
         with open(filename, "w+") as f:
             json.dump(coord_system, f)
 
