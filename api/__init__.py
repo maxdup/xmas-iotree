@@ -11,16 +11,18 @@ from api.bp_webapp import bp_webapp
 
 
 def create_app(config):
+    template_dir = os.path.join(os.path.dirname(__file__), '..')
+    template_dir = os.path.join(template_dir, 'webapp/build')
     app = Flask('iotree',
-                static_folder='webapp/build',
-                template_folder='webapp/build')
+                static_folder=template_dir,
+                template_folder=template_dir)
     CORS(app)
 
     app.config.from_object(config)
     app.url_map.strict_slashes = True
 
     app.register_blueprint(bp_httpapi)
-    # app.register_blueprint(bp_webapp)
+    app.register_blueprint(bp_webapp)
 
     # socketio.init_app(app)
 

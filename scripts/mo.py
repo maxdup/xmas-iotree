@@ -2,6 +2,7 @@ import board
 import neopixel
 from time import sleep
 import math
+import json
 
 with open('/var/www/xmas-iotree/coordinates.json', 'r+') as f:
     coords = json.loads(f.read() or '{}')
