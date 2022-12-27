@@ -18,7 +18,7 @@ def getScriptDir():
 
 def list_scripts():
     sdir = getScriptDir()
-    return [f for f in os.listdir(sdir) if f.endswith(".py")]
+    return [f for f in os.listdir(sdir) if f.endswith(".py") and not f.startswith('_')]
 
 
 def get_filepath(filename=None):
