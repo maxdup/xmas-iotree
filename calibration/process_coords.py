@@ -1,19 +1,6 @@
-import os
-import sys
-import inspect
-import json
-currentdir = os.path.dirname(os.path.abspath(
-    inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
+from utils import IOArgParser, JSONFileRead, JSONFileWrite
 
-from config import NLED  # NOQA: #E402
-
-
-COORD_INPUT_FILE = 'scanned_coordinates.json'
-COORD_OUTPUT_FILE = 'processed_coordinates.json'
-
-CAMERA_SPACE = (1080, 1920) # portrait
+CAMERA_SPACE = (1080, 1920)  # portrait
 # CAMERA_SPACE = (1920, 1080) # landscape
 
 
@@ -44,13 +31,24 @@ def aggregate(arrs):  # arrays to be averaged together
 
 if __name__ == '__main__':
 
-    with open(COORD_INPUT_FILE, 'r+') as f:
-        content = f.read() or '{}'
-        raw_coords = json.loads(content)
+    args = IOArgParser(
+        'Combines scan data into single coords',
+        'scanned_coordinates.json',
+        'The filename for your scanned coordinates',
+        'processed_coordinates.json',
+        'The filename for your processed coordinates',
+    )
+
+    raw_coords = JSONFileRead(args.input_coords)
+
+    NLED = min(len(raw_coords['xpos']),
+               len(raw_coords['ypos']),
+               len(raw_coords['xneg']),
+               len(raw_coords['yneg']),)
 
     coords = [(0, 0, 0)] * NLED
 
-    maxW = CAMERA_SPACE[0] # horizontal offset
+    maxW = CAMERA_SPACE[0]  # horizontal offset
     maxH = CAMERA_SPACE[1]
 
     Xs = aggregate([[p[0]if p else None for p in raw_coords['xpos']],
@@ -88,7 +86,4 @@ if __name__ == '__main__':
         if not c[0] or not c[1] or not c[2]:
             print(c)
 
-
-    with open(COORD_OUTPUT_FILE, 'w') as f:
-        output = json.dumps(coords)
-        f.write(output)
+    JSONFileWrite(args.output_coords, coords)

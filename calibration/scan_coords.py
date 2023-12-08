@@ -1,3 +1,5 @@
+from utils import IOArgParser, JSONFileRead, JSONFileWrite
+
 import requests
 import os
 import sys
@@ -11,6 +13,7 @@ from datetime import datetime, timedelta
 import numpy
 import random
 import cv2
+
 currentdir = os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -46,12 +49,23 @@ lit = {'r': 255, 'g': 255, 'b': 255}
 unlit = {'r': 0, 'g': 0, 'b': 0}
 leds = [unlit] * 50
 
+index = 0
+arr = []
+while True:
+    cap = cv2.VideoCapture(index)
+    if not cap.read()[0]:
+        break
+    else:
+        arr.append(index)
+    cap.release()
+    index += 1
+
 cam = cv2.VideoCapture(0)
 
 
 def sequenceAt(i):
     i = min(NLED-1, max(0, i))
-    print('calibrating {}/{}'.format(i+1, NLED))
+    print('calibrating {}/{}'.format(i+1, NLED), end='\r')
 
     leds = [unlit] * NLED
     leds[i] = lit
@@ -194,7 +208,7 @@ if __name__ == '__main__':
     cam.set(cv2.CAP_PROP_FRAME_WIDTH, cam_w)
     cam.set(cv2.CAP_PROP_FRAME_HEIGHT, cam_h)
 
-    led_url = args.url
+    led_url = os.path.join(args.url, 'api/leds')
 
     if args.mode == 'assisted':
         print(ASSISTED_MODE_INSTRUCTIONS)
@@ -208,10 +222,13 @@ if __name__ == '__main__':
                    random.randrange(0, 100)) for i in range(NLED)]
 
     filecoords = {}
-    if os.path.exists(COORDFILE):
+
+    try:
         with open(COORDFILE, 'r+') as f:
             content = f.read() or '{}'
             filecoords = json.loads(content)
+    except Exception as e:
+        pass
 
     filecoords[args.angle] = coords
 

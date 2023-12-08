@@ -1,31 +1,22 @@
+from utils import IOArgParser, JSONFileRead, JSONFileWrite
+
 import os
-import json
 import requests
-import argparse
-
-
-def submit_leds(config_url, filename):
-    with open(filename, 'r+') as f:
-        coords = json.loads(f.read() or '{}')
-    config = {'coords': coords}
-    requests.post(os.path.join(config_url, 'api/coords/'), json=config)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Submit Coordinates to your led controller')
 
-    parser.add_argument('url',
-                        help='The api endpoint that controls your leds (ex: http://192.168.1.11).')
+    args = IOArgParser('Submit Coordinates to your led controller',
+                       'coordinates.json',
+                       'The json file containing your coordinates (ex: coordinates.json)',
+                       api_url=True)
 
-    parser.add_argument('-c', '--coordinates', default="coordinates.json",
-                        help='The json file containing your coordinates (ex: coordinates.json).')
-
-    args = parser.parse_args()
-    led_url = args.url
-    coord_file = args.coordinates
+    coords = JSONFileRead(args.input_file)
+    url = os.path.join(config_url, 'api/coords/')
+    body = {'coords': coords}
 
     try:
-        submit_leds(led_url, coord_file)
+        submit_leds(url, body)
+        requests.post(url, json=body)
     except Exception as e:
-        print(e)
+        print('Network Error')

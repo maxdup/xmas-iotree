@@ -52,7 +52,7 @@ def main():
         if 'array' in dad_bod:
             colors = dad_bod['array']
             if isPI:
-                for i in range(len(coylors)):
+                for i in range(len(colors)):
                     c = colors[i]
                     pixels[i] = (c[0], c[1], c[2])
                 pixels.show()
